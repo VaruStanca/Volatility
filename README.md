@@ -1,81 +1,96 @@
 # Volatility
+# How to Install Volatility on Linux
+[Volatility](https://www.volatilityfoundation.org) is a powerful tool used for analyzing memory dumps on Linux, Mac, and Windows systems. On Linux and Mac systems, one has to build profiles separately, and notably, they must match the memory system profile (building a Ubuntu 18.04.3 profile to analyze a Ubuntu 18.04.4 system will not work). This article will go over all the dependencies that need to be downloaded as well as how to build a profile.
 
+# Dependencies
+Note that information is taken from [Volatility's Github](https://github.com/volatilityfoundation/volatility/wiki/Installation). Many Volatility plugins will not work with the following packages.
 
-How to Install Volatility on Linux
-Volatility is a powerful tool used for analyzing memory dumps on Linux, Mac, and Windows systems. On Linux and Mac systems, one has to build profiles separately, and notably, they must match the memory system profile (building a Ubuntu 18.04.3 profile to analyze a Ubuntu 18.04.4 system will not work). This article will go over all the dependencies that need to be downloaded as well as how to build a profile.
-
-Dependencies
-Note that information is taken from Volatility's Github. Many Volatility plugins will not work with the following packages.
-
-Prerequisites for Dependencies
+## Prerequisites for Dependencies
 Run the following:
+<pre><code>$ sudo apt-get install build-essential autoconf dwarfdump git subversion pcregrep libpcre++-dev python-dev -y
+</code></pre>
 
-$ sudo apt-get install build-essential autoconf dwarfdump git subversion pcregrep libpcre++-dev python-dev -y
-Install Distorm
-Do not use pip install distorm3. It will not build correctly. Instead, download the source tar from here. After unzipping it, cd into the the directory and run:
-
-$ python setup.py build
+## Install Distorm
+Do not use `pip install distorm3`. It will not build correctly. Instead, download the source tar from [here](https://github.com/gdabah/distorm/releases). After unzipping it, cd into the the directory and run:
+<pre><code>$ python setup.py build
 $ python setup.py build install
-Install Yara
-Do not use pip install yara-python. I made this mistake, and Volatility was not able to detect Yara. Make sure to go to the main website, and download the source tar. Run:
+</code></pre>
 
-$ tar -zxf yara-4.0.1.tar.gz
+## Install Yara
+Do not use `pip install yara-python`. I made this mistake, and Volatility was not able to detect Yara. Make sure to go to the [main website](https://github.com/VirusTotal/yara/releases), and download the source tar. Run:
+<pre><code>$ tar -zxf yara-4.0.1.tar.gz
 $ cd yara-4.0.1
 $ ./bootstrap.sh
+</code></pre>
+
 Install some dependencies:
+<pre><code>$ sudo apt-get install automake libtool make gcc pkg-config</code></pre>
 
-$ sudo apt-get install automake libtool make gcc pkg-config
 Continue:
-
-$ ./configure
+<pre><code>$ ./configure
 $ make
 $ sudo make install
+</code></pre>
+
 Check to see if it installed properly:
+<pre><code>$ make check
+</code></pre>
 
-$ make check
-Install PyCrypto
-Download the latest source from here and cd into the directory.
-
-$ python setup.py build
+## Install PyCrypto
+Download the latest source from [here](https://www.dlitz.net/software/pycrypto/) and cd into the directory.
+<pre><code>$ python setup.py build
 $ sudo python setup.py build install
-Install Volatility
+</code></pre>
+
+## Install Volatility
 Finally, clone from Volatility's Github repo and install:
-
-$ git clone https://github.com/volatilityfoundation/volatility.git
+<pre><code>$ git clone https://github.com/volatilityfoundation/volatility.git
 $ cd volatility
 $ sudo python setup.py build install
+</code></pre>
+
 Create module.dwarf:
-
-$ cd /tools/linux
+<pre><code>$ cd /tools/linux
 $ make
+</code></pre>
+
 Make a zip containing module.dwarf and the exact profile of your Linux distro:
-
-$ cd ../../../
+<pre><code>$ cd ../../../
 $ sudo zip $(lsb_release -i -s)_$(uname -r)_profile.zip ./volatility/tools/linux/module.dwarf /boot/System.map-$(uname -r)
+</code></pre>
+
 Copy the zip file into the Volatility plugin path:
+<pre><code>$ cp *name*.zip ./volatility/volatility/plugins/overlays/linux
+</code></pre>
 
-$ cp *name*.zip ./volatility/volatility/plugins/overlays/linux
 Test if installation is complete and profile is configured:
-
-$ cd volatility
+<pre><code>$ cd volatility
 $ python vol.py --info | grep $(lsb_release -i -s)
-Generating a Memory Sample with LiME
+</code></pre>
+
+# Generating a Memory Sample with LiME
 LiME is a memory acquisition tool made specifically for Linux devices.
 
-Dependencies
-$ sudo apt install linux-headers-4.9.0-8-amd64
+## Dependencies
+<pre><code>$ sudo apt install linux-headers-4.9.0-8-amd64
 $ sudo apt install build-essential
-Download and Compile
+</code></pre>
+
+## Download and Compile
 Install the latest version:
+<pre><code>$ git clone https://github.com/504ensicsLabs/LiME
+</code></pre>  
 
-$ git clone https://github.com/504ensicsLabs/LiME
 Compile:
-
-$ cd LiME/src/
+<pre><code>$ cd LiME/src/
 $ make
-A file named lime-5.3.0-62-generic.ko is created.
+</code></pre>
+A file named `lime-5.3.0-62-generic.ko` is created.
 
-Taking Memory Image
-Use insmod to load the compiled LKM. Also, format=lime and timeout=0 are imp ortant for analysis via Volatility.
+## Taking Memory Image
+Use insmod to load the compiled LKM. Also, `format=lime` and `timeout=0` are imp
+ortant for analysis via Volatility.
+<pre><code>$ sudo insmod lime-5.3.0-62-generic.ko "path=/home/dump1.mem format=lime timeout=0"
+</code></pre>
 
-$ sudo insmod lime-5.3.0-62-generic.ko "path=/home/dump1.mem format=lime timeout=0"
+ 
